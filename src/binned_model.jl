@@ -14,11 +14,11 @@ struct BinnedModel{F<:Function, E<:Tuple{Vararg{Binning}}} <: Function
     binning::E
 end
 
-function BinnedModel(f_expectation, edges::Tuple{Vararg{Binning}})
+function BinnedModel(f_expectation::F, edges::Tuple{Vararg{Binning}}) where F
     BinnedModel{Core.Typeof(f_expectation),Core.Typeof(edges)}(f_expectation, edges)
 end
 
-function BinnedModel(f_expectation, edges::Tuple{Vararg{BinEdges}})
+function BinnedModel(f_expectation::F, edges::Tuple{Vararg{BinEdges}}) where F
     BinnedModel(f_expectation, bin_intervals.(edges))
 end
 
@@ -51,7 +51,9 @@ See also [`binned_likelihood`](@ref).
 function binned_model end
 export binned_model
 
-binned_model(f_expectation, edges::Tuple{Vararg{AbstractVector}}) = BinnedModel(f_expectation, edges)
+function binned_model(f_expectation::F, edges::Tuple{Vararg{AbstractVector}}) where F
+    BinnedModel(f_expectation, edges)
+end
 
 
 
