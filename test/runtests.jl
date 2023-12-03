@@ -5,6 +5,7 @@ import Test
 Test.@testset "Package BinnedModels" begin
     include("test_aqua.jl")
     include("test_binning.jl")
+    include("test_binning_algorithm.jl")
     include("test_binned_model.jl")
     include("test_docs.jl")
     isempty(Test.detect_ambiguities(BinnedModels))

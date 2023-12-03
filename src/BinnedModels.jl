@@ -15,10 +15,12 @@ using DocStringExtensions
 using IntervalSets: AbstractInterval, Interval, leftendpoint, rightendpoint
 using DensityInterface: logdensityof, logfuncdensity, DensityKind, IsDensity, HasDensity, NoDensity
 using Distributions: product_distribution, Poisson
-using StatsBase: Histogram
+import StatsBase
+using StatsBase: Histogram, fit
 using StructArrays: StructArray, StructVector
 
 include("binning.jl")
+include("binning_algorithm.jl")
 include("binned_model.jl")
 
 end # module
