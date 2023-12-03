@@ -56,6 +56,28 @@ function binned_model(f_expectation::F, edges::Tuple{Vararg{AbstractVector}}) wh
 end
 
 
+# 1D binned loss:
+function binned_lossf(m::BinnedModel{F,<:Tuple{<:Binning}}, observed_counts::AbstractVector{<:Real}) where F
+    n_observed = sum(observed_counts)
+    cdf_observed = cumsum(observed_counts .* inv(n_observed))
+
+    function _binned_loss_function(params)
+        m_at_params = m.f_expectation(params)
+        f_density = _get_f_density(m_at_params, DensityKind(m_at_params))
+        binning = only(m.binning)
+    
+        # ToDo: Offer more advanced integration methods than midpoint-rule:
+        expected_counts = bin_widths(binning) .* f_density.(bin_centers(binning))
+        n_expected = sum(expected_counts)
+        cdf_expected = cumsum(expected_counts .* inv(n_expected))
+        shape_loss = sum(abs.(cdf_expected .- cdf_observed))
+        # count_loss = (n_expected - n_observed)^2 / n_observed
+        count_loss = log(n_expected / n_observed)
+        return shape_loss + count_loss
+    end
+end
+export binned_lossf
+
 
 """
     binned_likelihood(f_expectation, edges::Tuple{AbstractVector,...}, data::AbstractVector{<:Integer})
