@@ -58,8 +58,9 @@ end
 
 # 1D binned loss:
 function binned_lossf(m::BinnedModel{F,<:Tuple{<:Binning}}, observed_counts::AbstractVector{<:Real}) where F
-    n_observed = sum(observed_counts)
-    cdf_observed = cumsum(observed_counts .* inv(n_observed))
+    #n_observed = sum(observed_counts)
+    #cdf_observed = cumsum(observed_counts .* inv(n_observed))
+    ishape_observed = cumsum(observed_counts)
 
     function _binned_loss_function(params)
         m_at_params = m.f_expectation(params)
@@ -68,12 +69,14 @@ function binned_lossf(m::BinnedModel{F,<:Tuple{<:Binning}}, observed_counts::Abs
     
         # ToDo: Offer more advanced integration methods than midpoint-rule:
         expected_counts = bin_widths(binning) .* f_density.(bin_centers(binning))
-        n_expected = sum(expected_counts)
-        cdf_expected = cumsum(expected_counts .* inv(n_expected))
-        shape_loss = sum(abs.(cdf_expected .- cdf_observed))
-        # count_loss = (n_expected - n_observed)^2 / n_observed
-        count_loss = log(n_expected / n_observed)
-        return shape_loss + count_loss
+        #n_expected = sum(expected_counts)
+        #cdf_expected = cumsum(expected_counts .* inv(n_expected))
+        ishape_expected = cumsum(expected_counts)
+        #shape_loss = sum(abs2.(cdf_expected .- cdf_observed))
+        #count_loss = (n_expected - n_observed)^2
+        ishape_loss = sum(abs2.(ishape_expected .- ishape_observed))
+        #return shape_loss + count_loss
+        return ishape_loss
     end
 end
 export binned_lossf
