@@ -1,17 +1,13 @@
 # This file is a part of BinnedModels.jl, licensed under the MIT License (MIT).
 
-using BinnedModels
-using Test
-
-using Random, LinearAlgebra, Statistics
-using StatsBase, Distributions
-
+using MeasureBase: Likelihood
+using DensityInterface
 
 @testset "binned_models" begin
     par_truth = (
-        mu = [-0.7, 1.5],
-        sigma = 0.6,
-        rate = [2389, 5923]
+        mu = [-1.0, 2.0],
+        sigma = 0.5,
+        rate = [500, 1000]
     )
 
     data_hist = let par=par_truth
@@ -33,8 +29,13 @@ using StatsBase, Distributions
     plot!(normalize(data_hist, mode = :density), lt = :stepbins)
     =#
 
+    @test @inferred(binned_model(f_expectation, data_hist.edges)) isa BinnedModels.BinnedModel
+    m = binned_model(f_expectation, data_hist.edges)
+
+    likelihood = Likelihood(m, data_hist.weights)
+    @test @inferred(logdensityof(likelihood, par_truth)) == logpdf(m(par_truth), data_hist.weights)
+
+    @test @inferred(binned_likelihood(f_expectation, data_hist)) isa DensityInterface.LogFuncDensity
     likelihood = binned_likelihood(f_expectation, data_hist)
-    
-    # @test @inferred(logdensityof(likelihood, par_truth)) isa Real
-    @test logdensityof(likelihood, par_truth) isa Real
+    @test @inferred(logdensityof(likelihood, par_truth)) == logpdf(m(par_truth), data_hist.weights)
 end
