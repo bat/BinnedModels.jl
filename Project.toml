@@ -1,6 +1,6 @@
 name = "BinnedModels"
 uuid = "fa1fc709-16e9-4084-816c-4cfb0f07afb9"
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
