@@ -9,12 +9,12 @@ Respresents a statistical model for binned data.
 User code should not instantiate `BinnedModel` directly, but use
 [`binned_model`](@ref) instead.
 """
-struct BinnedModel{F<:Function, E<:Tuple{Vararg{Binning}}} <: Function
+struct BinnedModel{F<:Function, E<:Tuple{Vararg{BinIntervals}}} <: Function
     f_expectation::F
     binning::E
 end
 
-function BinnedModel(f_expectation::F, edges::Tuple{Vararg{Binning}}) where F
+function BinnedModel(f_expectation::F, edges::Tuple{Vararg{BinIntervals}}) where F
     BinnedModel{Core.Typeof(f_expectation),Core.Typeof(edges)}(f_expectation, edges)
 end
 
@@ -31,7 +31,7 @@ function _m_params_densityfunc(::Any, ::HasDensity)
 end
 
 # For 1-dim data only:
-function (m::BinnedModel{F,<:Tuple{<:Binning}})(params) where F
+function (m::BinnedModel{F,<:Tuple{<:BinIntervals}})(params) where F
     m_at_params = m.f_expectation(params)
     f_density = _get_f_density(m_at_params, DensityKind(m_at_params))
     binning = only(m.binning)
@@ -41,9 +41,9 @@ end
 
 
 """
-    binned_model(f_expectation, edges::Tuple{AbstractVector,...})
+    binned_model(f_expectation, binning::BinningLike)
 
-Create a staticstical binned model from an density expectation function
+Create a statistical binned model from an density expectation function
 `f_expectation` and a tuple of bin edges `edges`.
 
 See also [`binned_likelihood`](@ref).
@@ -51,14 +51,19 @@ See also [`binned_likelihood`](@ref).
 function binned_model end
 export binned_model
 
-function binned_model(f_expectation::F, edges::Tuple{Vararg{AbstractVector}}) where F
-    BinnedModel(f_expectation, edges)
+function binned_model(f_expectation::F, binning::BinningLike) where F
+    BinnedModel(f_expectation, _canonical_binnings(binning))
 end
+
+_canonical_binnings(binnings::Tuple{Vararg{BinIntervals}}) = binnings
+_canonical_binnings(binning::BinIntervals) = (binning,)
+_canonical_binnings(multidim_edges::Tuple{Vararg{Union{BinEdges,BinIntervals}}}) = _canonical_binnings.(multidim_edges)
+_canonical_binnings(edges::BinEdges) = bin_intervals(edges)
 
 
 
 """
-    binned_likelihood(f_expectation, edges::Tuple{AbstractVector,...}, data::AbstractVector{<:Integer})
+    binned_likelihood(f_expectation, binning::BinningLike, bin_counts::AbstractVector{<:Integer})
     binned_likelihood(f_expectation, h::StatsBase.Histogram{<:Integer})
 
 Constructs a binned likelihood object that is compatible with the
@@ -69,8 +74,8 @@ See also [`binned_model`](@ref).
 function binned_likelihood end
 export binned_likelihood
 
-function binned_likelihood(f_expectation, edges::Tuple{Vararg{AbstractVector}}, data::AbstractVector{<:Integer})
-    logfuncdensity(Base.Fix2(logdensityof, data) ∘ binned_model(f_expectation, edges))
+function binned_likelihood(f_expectation, binning::BinningLike, bin_counts::AbstractVector{<:Integer})
+    logfuncdensity(Base.Fix2(logdensityof, bin_counts) ∘ binned_model(f_expectation, binning))
 end
 
 function binned_likelihood(f_expectation, h::Histogram{<:Integer})
